@@ -98,6 +98,121 @@ async function fetchWithTimeout(url: string, timeoutMs = 10000) {
   ]);
 }
 
+function getDomain(url: string | null) {
+  if (!url) {
+    return 'Ask HN';
+  }
+
+  try {
+    return new URL(url).hostname.replace('www.', '');
+  } catch {
+    return 'External Link';
+  }
+}
+
+function formatDate(date: string) {
+  try {
+    return new Date(date).toLocaleDateString();
+  } catch {
+    return '';
+  }
+}
+
+function StoryCard({
+  item,
+  onOpen,
+  onLike,
+  onSave,
+}: {
+  item: StoryItem;
+  onOpen: () => void;
+  onLike: () => void;
+  onSave: () => void;
+}) {
+  return (
+    <TouchableOpacity
+      activeOpacity={0.88}
+      onPress={onOpen}
+      className="mx-4 mb-4 overflow-hidden rounded-3xl border border-orange-100 bg-white shadow-sm">
+      <View className="p-4">
+        <View className="mb-3 flex-row items-center justify-between">
+          <View className="rounded-full bg-orange-50 px-3 py-1">
+            <Text className="text-xs font-bold text-orange-600">
+              {getDomain(item.url)}
+            </Text>
+          </View>
+
+          <Text className="text-xs text-gray-400">{formatDate(item.created_at)}</Text>
+        </View>
+
+        <Text className="text-lg font-extrabold leading-6 text-gray-950">
+          {item.title || 'Untitled Story'}
+        </Text>
+
+        <Text className="mt-2 text-sm text-gray-500">by {item.author}</Text>
+
+        <View className="mt-4 flex-row flex-wrap gap-2">
+          <View className="rounded-full bg-gray-100 px-3 py-1">
+            <Text className="text-xs font-semibold text-gray-700">
+              ▲ {item.points || 0} points
+            </Text>
+          </View>
+
+          <View className="rounded-full bg-gray-100 px-3 py-1">
+            <Text className="text-xs font-semibold text-gray-700">
+              💬 {item.num_comments || 0} comments
+            </Text>
+          </View>
+
+          {!item.url ? (
+            <View className="rounded-full bg-yellow-100 px-3 py-1">
+              <Text className="text-xs font-semibold text-yellow-700">
+                Text Story
+              </Text>
+            </View>
+          ) : null}
+        </View>
+
+        <View className="mt-5 flex-row gap-3">
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={event => {
+              event.stopPropagation();
+              onLike();
+            }}
+            className={`flex-1 rounded-2xl px-4 py-3 ${
+              item.liked ? 'bg-red-500' : 'bg-gray-100'
+            }`}>
+            <Text
+              className={`text-center text-sm font-bold ${
+                item.liked ? 'text-white' : 'text-gray-800'
+              }`}>
+              {item.liked ? '❤️ Liked' : '🤍 Like'}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={event => {
+              event.stopPropagation();
+              onSave();
+            }}
+            className={`flex-1 rounded-2xl px-4 py-3 ${
+              item.saved ? 'bg-orange-500' : 'bg-gray-100'
+            }`}>
+            <Text
+              className={`text-center text-sm font-bold ${
+                item.saved ? 'text-white' : 'text-gray-800'
+              }`}>
+              {item.saved ? '🔖 Saved' : '📌 Save'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
 export default function App() {
   const [stories, setStories] = useState<StoryItem[]>([]);
   const [savedIds, setSavedIds] = useState<string[]>([]);
@@ -274,99 +389,115 @@ export default function App() {
 
   if (initialLoading) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-gray-100">
-        <StatusBar barStyle="dark-content" />
-        <ActivityIndicator size="large" />
-        <Text className="mt-3 text-gray-600">Loading Hacker News...</Text>
+      <SafeAreaView className="flex-1 items-center justify-center bg-orange-50">
+        <StatusBar barStyle="dark-content" backgroundColor="#FFF7ED" />
+        <View className="rounded-3xl bg-white px-8 py-7 shadow-sm">
+          <ActivityIndicator size="large" color="#F97316" />
+          <Text className="mt-4 text-center text-base font-bold text-gray-900">
+            Loading Hacker News
+          </Text>
+          <Text className="mt-1 text-center text-xs text-gray-500">
+            Fetching latest stories...
+          </Text>
+        </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-100">
-      <StatusBar barStyle="dark-content" />
-
-      <View className="px-4 pb-3 pt-4">
-        <Text className="text-3xl font-extrabold text-gray-950">
-          Hacker News
-        </Text>
-        <Text className="mt-1 text-sm text-gray-500">
-          Infinite feed with optimistic like and save actions
-        </Text>
-      </View>
+    <SafeAreaView className="flex-1 bg-orange-50">
+      <StatusBar barStyle="dark-content" backgroundColor="#FFF7ED" />
 
       <FlatList
         data={stories}
         keyExtractor={item => item.objectID}
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.6}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-        }
         initialNumToRender={10}
         maxToRenderPerBatch={10}
         windowSize={7}
         removeClippedSubviews={true}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor="#F97316"
+            colors={['#F97316']}
+          />
+        }
+        ListHeaderComponent={
+          <View className="px-4 pb-4 pt-5">
+            <View className="overflow-hidden rounded-3xl bg-gray-950 p-5">
+              <View className="flex-row items-center justify-between">
+                <View>
+                  <Text className="text-xs font-bold uppercase tracking-widest text-orange-400">
+                    Hacker News
+                  </Text>
+                  <Text className="mt-2 text-3xl font-black text-white">
+                    Top Stories
+                  </Text>
+                </View>
+
+                <View className="h-12 w-12 items-center justify-center rounded-2xl bg-orange-500">
+                  <Text className="text-xl font-black text-white">Y</Text>
+                </View>
+              </View>
+
+              <Text className="mt-3 text-sm leading-5 text-gray-300">
+                Fast infinite feed with optimistic like and save actions.
+              </Text>
+
+              <View className="mt-5 flex-row gap-2">
+                <View className="rounded-full bg-white/10 px-3 py-2">
+                  <Text className="text-xs font-bold text-white">
+                    {stories.length} loaded
+                  </Text>
+                </View>
+
+                <View className="rounded-full bg-white/10 px-3 py-2">
+                  <Text className="text-xs font-bold text-white">
+                    {savedIds.length} saved
+                  </Text>
+                </View>
+
+                <View className="rounded-full bg-white/10 px-3 py-2">
+                  <Text className="text-xs font-bold text-white">
+                    {likedIds.length} liked
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        }
         ListEmptyComponent={
-          <View className="px-6 py-20">
-            <Text className="text-center text-lg font-bold text-gray-800">
+          <View className="mx-4 rounded-3xl bg-white px-6 py-14">
+            <Text className="text-center text-lg font-black text-gray-900">
               No stories loaded
             </Text>
             <Text className="mt-2 text-center text-sm text-gray-500">
-              Pull down to refresh.
+              Pull down to refresh and try again.
             </Text>
           </View>
         }
         ListFooterComponent={
           loadingMore ? (
-            <View className="py-5">
-              <ActivityIndicator />
-              <Text className="mt-2 text-center text-xs text-gray-500">
+            <View className="py-6">
+              <ActivityIndicator color="#F97316" />
+              <Text className="mt-2 text-center text-xs font-semibold text-gray-500">
                 Loading more stories...
               </Text>
             </View>
-          ) : null
+          ) : (
+            <View className="py-4" />
+          )
         }
         renderItem={({item}) => (
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={() => handleOpenStory(item)}
-            className="mx-4 mb-3 rounded-2xl border border-gray-200 bg-white p-4">
-            <Text className="text-base font-bold text-gray-900">
-              {item.title || 'Untitled Story'}
-            </Text>
-
-            <Text className="mt-2 text-xs text-gray-500">
-              by {item.author} • {item.points || 0} points •{' '}
-              {item.num_comments || 0} comments
-            </Text>
-
-            <View className="mt-4 flex-row gap-3">
-              <TouchableOpacity
-                activeOpacity={0.8}
-                onPress={() => handleLike(item.objectID)}
-                className={`rounded-xl px-4 py-2 ${
-                  item.liked ? 'bg-red-100' : 'bg-gray-100'
-                }`}>
-                <Text
-                  className={item.liked ? 'text-red-600' : 'text-gray-700'}>
-                  {item.liked ? '❤️ Liked' : '🤍 Like'}
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                activeOpacity={0.8}
-                onPress={() => handleSave(item.objectID)}
-                className={`rounded-xl px-4 py-2 ${
-                  item.saved ? 'bg-blue-100' : 'bg-gray-100'
-                }`}>
-                <Text
-                  className={item.saved ? 'text-blue-700' : 'text-gray-700'}>
-                  {item.saved ? '🔖 Saved' : '📌 Save'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </TouchableOpacity>
+          <StoryCard
+            item={item}
+            onOpen={() => handleOpenStory(item)}
+            onLike={() => handleLike(item.objectID)}
+            onSave={() => handleSave(item.objectID)}
+          />
         )}
       />
     </SafeAreaView>
