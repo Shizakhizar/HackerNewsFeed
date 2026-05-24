@@ -1,79 +1,94 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# Hacker News Feed - React Native 
 
-# Getting Started
+## Overview
 
->**Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions till "Creating a new application" step, before proceeding.
+This is a React Native Android app built for a take-home. It displays an infinite-scrolling feed of Hacker News stories using the Hacker News Algolia API.
 
-## Step 1: Start the Metro Server
+The app supports optimistic like/save actions, local persistence for saved/liked stories, pull-to-refresh, opening article links, and graceful handling for stories without URLs.
 
-First, you will need to start **Metro**, the JavaScript _bundler_ that ships _with_ React Native.
+## Tech Stack
 
-To start Metro, run the following command from the _root_ of your React Native project:
+- React Native Bare CLI
+- TypeScript
+- NativeWind
+- Android
+- Hacker News Algolia API
+- Android SharedPreferences through a small native module for local persistence
 
-```bash
-# using npm
+## Features
+
+- Loads Hacker News stories on app launch
+- Infinite scrolling feed
+- Pull-to-refresh
+- Tap story to open article URL
+- Graceful handling for stories with null URL
+- Optimistic Like action
+- Optimistic Save action
+- Mock like/save request with random 300–800ms delay
+- Mock request fails around 15% of the time
+- Rollback on failed like/save request
+- Saved and liked states persist after closing and reopening the app
+
+## API Used
+
+```text
+https://hn.algolia.com/api/v1/search?tags=story&page={page}&hitsPerPage=20
+
+How to Run Locally
+1. Install dependencies
+npm install
+2. Start Metro
 npm start
+3. Run on Android
 
-# OR using Yarn
-yarn start
-```
+In another terminal:
 
-## Step 2: Start your Application
+npx react-native run-android
 
-Let Metro Bundler run in its _own_ terminal. Open a _new_ terminal from the _root_ of your React Native project. Run the following command to start your _Android_ or _iOS_ app:
+If the app is already installed, it can be opened with:
 
-### For Android
+adb shell monkey -p com.hackernewsfeed 1
+Platform Tested
 
-```bash
-# using npm
-npm run android
+Tested on Android Emulator:
 
-# OR using Yarn
-yarn android
-```
+Pixel 6 AVD
+Android 16
+Architecture Decisions
 
-### For iOS
+The project keeps the app simple and focused on the requirements.
 
-```bash
-# using npm
-npm run ios
+FlatList is used for efficient large-list rendering.
+API pagination is handled with local page state.
+Like and save use optimistic UI updates for a fast user experience.
+A mocked request function simulates real API behavior with delay and failure.
+Rollback restores the previous exact UI state if the mocked action fails.
+Local persistence is handled using Android SharedPreferences through a small native module because AsyncStorage caused native module issues in the current setup.
+Tradeoffs
+The app focuses on Android only, as required.
+Local persistence is implemented specifically for Android using SharedPreferences.
+A separate Saved Stories screen was not added to keep the scope focused.
+Refresh may show the same first story because the API can return the same latest feed again.
+What I Would Add With More Time
+Separate Saved Stories screen
+Search/filter support
+Better empty/error states
+Unit tests for state logic
+E2E tests for scroll, refresh, and persistence
+Better offline support
+More polished animations and UI
+AI Assistance
 
-# OR using Yarn
-yarn ios
-```
+I used ChatGPT to help with setup debugging, architecture planning, NativeWind setup, optimistic update logic, local persistence strategy, and README drafting.
 
-If everything is set up _correctly_, you should see your new app running in your _Android Emulator_ or _iOS Simulator_ shortly provided you have set up your emulator/simulator correctly.
+I manually verified the output by testing:
 
-This is one way to run your app — you can also run it directly from within Android Studio and Xcode respectively.
+App launch
+Feed loading
+Infinite scroll
+Pull-to-refresh
+Opening stories
+Like/save optimistic updates
+Rollback on mocked failure
+Persistence after closing and reopening the app
 
-## Step 3: Modifying your App
-
-Now that you have successfully run the app, let's modify it.
-
-1. Open `App.tsx` in your text editor of choice and edit some lines.
-2. For **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Developer Menu** (<kbd>Ctrl</kbd> + <kbd>M</kbd> (on Window and Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (on macOS)) to see your changes!
-
-   For **iOS**: Hit <kbd>Cmd ⌘</kbd> + <kbd>R</kbd> in your iOS Simulator to reload the app and see your changes!
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [Introduction to React Native](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you can't get this to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
